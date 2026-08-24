@@ -1,62 +1,51 @@
-# Handwritten Digit Recognition with a Convolutional Neural Network
+Handwritten Digit Recognition with a Convolutional Neural Network
 
-### My First Machine Learning Project
+My First Machine Learning Project
 
-**Python · Keras · Convolutional Neural Networks · Image Classification · MNIST · GUI**
+Python · Keras · Convolutional Neural Networks · Image Classification · MNIST · GUI
 
-## Overview
+Overview
 
 This was my first machine-learning project.
 
-I trained a convolutional neural network to recognize handwritten digits from **0 through 9**, then connected the trained model to a graphical interface where a user can draw a new digit and receive a prediction.
+I trained a convolutional neural network to recognize handwritten digits from 0 through 9, then connected the trained model to a graphical interface where a user can draw a digit and receive a prediction.
 
-The project introduced me to the complete path from a labeled image dataset to a working prediction program:
+The project introduced me to the path from a labeled image dataset to a working prediction program:
 
-```text
 training images
 → image preprocessing
 → CNN training
-→ model evaluation
+→ model monitoring
 → saved model
 → interactive GUI
-```
 
-## Dataset
+Dataset and Preprocessing
 
-I trained the model using the **MNIST handwritten-digit dataset**.
+I used the MNIST handwritten-digit dataset, which contains 70,000 labeled grayscale images across ten classes:
 
-MNIST contains **70,000 labeled grayscale images** across ten classes:
-
-```text
 0 1 2 3 4 5 6 7 8 9
-```
 
-The project uses the standard split:
+The standard MNIST split contains:
 
-```text
 60,000 training images
 10,000 test images
-```
 
-Each image is **28 × 28 pixels**.
+Each image is 28 × 28 pixels. Before training, the code:
 
-Before training, I reshape the images into the format expected by the CNN:
+reshapes each image to 28 × 28 × 1
 
-```text
-28 × 28 × 1
-```
+converts pixel values to float32
 
-I also convert the pixel values to floating-point numbers and normalize them from the original 0–255 range to **0–1**.
+scales pixels from 0–255 to 0–1
 
-The ten digit labels are converted into categorical output vectors for multiclass classification.
+converts digit labels to 10-class categorical vectors
 
-## CNN Architecture
+The 10,000-image MNIST test split is passed to Keras as validation_data during training and is evaluated again after the last epoch. Because the same split is used for training monitoring, I treat its final score as a validation-style result.
 
-I built the model with Keras using two convolutional stages followed by fully connected layers.
+CNN Architecture
 
-The architecture is:
+I built the model with Keras using two convolutional stages followed by dense layers.
 
-```text
 Input: 28 × 28 × 1
 ↓
 Conv2D: 32 filters, 5 × 5, ReLU
@@ -78,41 +67,39 @@ Dense: 64 neurons, ReLU
 Dropout: 0.5
 ↓
 Dense: 10 neurons, Softmax
-```
 
-The convolutional layers learn spatial patterns from the handwritten images. Pooling reduces the size of the intermediate feature maps, while the dense layers use the learned features to classify each image.
+The convolutional layers learn local stroke and shape patterns from the images. Max pooling reduces the spatial size of the learned maps. The dense layers combine those learned patterns for 10-class prediction.
 
-The final **softmax layer** outputs a probability for each of the ten possible digits.
+The final softmax layer returns one probability for each digit.
 
-## Training
+Training
 
-The network is trained using:
+The network is trained with:
 
-- 60,000 training images
-- batch size of 128
-- 10 epochs
-- categorical cross-entropy loss
-- Adadelta optimization
+60,000 training images
 
-During training, the model compares its predictions with the known digit labels and updates its parameters to reduce classification error.
+10,000 images used for validation-style monitoring
 
-The separate 10,000-image test set is used to measure the model's performance on images outside the training set.
+batch size of 128
+
+10 epochs
+
+categorical cross-entropy loss
+
+Adadelta optimization
 
 After training, the model is saved as:
 
-```text
 Digit_Recognizer.h5
-```
 
-This allows the trained CNN to be loaded later without retraining it every time the GUI is opened.
+The saved model can then be loaded for prediction without retraining the CNN each time the GUI starts.
 
-## Interactive Digit Recognition
+Interactive Digit Recognition
 
-I built graphical interfaces that let a user draw a digit and send it to the trained CNN for classification.
+I built two graphical interfaces that accept a user-drawn digit and pass it to the trained CNN.
 
-The general prediction pipeline is:
+The prediction path is:
 
-```text
 User draws a digit
 ↓
 Drawing is captured as an image
@@ -125,115 +112,75 @@ Pixel values are normalized
 ↓
 Image is reshaped to 28 × 28 × 1
 ↓
-CNN produces probabilities for digits 0–9
+CNN returns probabilities for digits 0–9
 ↓
 Highest-probability digit is displayed
-```
 
-The interface includes controls for predicting the digit and clearing the drawing canvas.
+gui_model.py
 
-## GUI Implementations
+This version uses Tkinter, Pillow, OpenCV, and NumPy.
 
-The repository contains two GUI implementations.
+The user draws on a 600 × 600 canvas. The drawing is saved as canvas.png, inverted, resized to 28 × 28, normalized, and passed to the saved model through load_model.py.
 
-### `gui_model.py`
+The interface displays the predicted digit and the model probability associated with that prediction.
 
-This version uses:
+gui_windows.py
 
-- Tkinter
-- Pillow
-- NumPy
+This Windows-specific version uses Tkinter, win32gui, Pillow ImageGrab, and NumPy.
 
-The user draws directly on a canvas. The drawing is saved to `canvas.png`, processed by the model-loading code, and passed through the trained network.
+The program captures the canvas directly from the window, resizes the captured image to 28 × 28, converts it to grayscale, normalizes it, and sends it through the CNN.
 
-The program displays both:
+Repository Files
 
-- the predicted digit
-- the model's probability for that prediction
-
-### `gui_windows.py`
-
-This version is designed specifically for Windows.
-
-It uses:
-
-- Tkinter
-- `win32gui`
-- Pillow `ImageGrab`
-- NumPy
-
-The program captures the drawing directly from the Windows canvas, resizes it to **28 × 28 pixels**, converts it to grayscale, normalizes it, and passes it into the CNN.
-
-## Repository Files
-
-```text
 train_model.py       Trains the CNN on MNIST and saves the model
-
 Digit_Recognizer.h5  Saved trained CNN
-
-load_model.py        Loads the saved model for prediction
-
-gui_model.py         Cross-platform drawing interface
-
+load_model.py        Loads the saved model and preprocesses canvas.png
+gui_model.py         Tkinter/Pillow drawing interface
 gui_windows.py       Windows-specific drawing interface
-
-canvas.png           Image used by the GUI prediction pipeline
-
+canvas.png           Image used by the gui_model.py prediction path
 requirements.txt     Python dependencies
-```
 
-## Technical Focus
+Technical Work
 
 This project introduced me to:
 
-- supervised machine learning
-- convolutional neural networks
-- image classification
-- image normalization and reshaping
-- multiclass softmax prediction
-- convolution and max pooling
-- dropout for regularization
-- training/test separation
-- saving and loading trained models
-- preprocessing user-generated input
-- connecting an ML model to an interactive GUI
+supervised machine learning
 
-It became the starting point for my later computer-vision projects, where I worked with larger image datasets, deeper CNN architectures, image augmentation, and class-imbalance experiments.
+convolutional neural networks
 
-## Running the Project
+image normalization and reshaping
 
-Install the required Python packages:
+multiclass softmax prediction
 
-```bash
+convolution and max pooling
+
+dropout regularization
+
+training/validation separation
+
+saving and loading trained models
+
+preprocessing user-generated input
+
+connecting a trained model to an interactive GUI
+
+It became the starting point for later computer-vision projects using larger image datasets, deeper CNNs, augmentation, and class-imbalance experiments.
+
+Running the Project
+
+Install the listed dependencies:
+
 pip install -r requirements.txt
-```
 
-To train the CNN from scratch:
+Train the CNN:
 
-```bash
 python train_model.py
-```
 
-This trains the network on MNIST and saves the resulting model as:
+Run the Tkinter/Pillow GUI:
 
-```text
-Digit_Recognizer.h5
-```
-
-To run the general GUI:
-
-```bash
 python gui_model.py
-```
 
-For the Windows-specific GUI, install `pywin32`:
+The Windows GUI also requires pywin32, which is not listed in the current requirements.txt:
 
-```bash
 pip install pywin32
-```
-
-Then run:
-
-```bash
 python gui_windows.py
-```
